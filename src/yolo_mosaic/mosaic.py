@@ -9,7 +9,14 @@ import numpy as np
 
 from yolo_mosaic.geometry import pixel_to_yolo, transform_pixel_box
 from yolo_mosaic.image_ops import letterbox_image
-from yolo_mosaic.models import AnnotatedImage, MosaicConfig, MosaicResult, PixelBox, ProcessingStats
+from yolo_mosaic.models import (
+    AnnotatedImage,
+    MosaicConfig,
+    MosaicResult,
+    PixelBox,
+    ProcessingStats,
+    ValidationConfig,
+)
 from yolo_mosaic.validation import validate_and_repair_box
 
 
@@ -60,9 +67,11 @@ def _select_items(
 def create_mosaic(
     items: Sequence[AnnotatedImage],
     config: MosaicConfig,
+    validation_config: ValidationConfig | None = None,
 ) -> MosaicResult:
     """Generate one deterministic equal-cell mosaic."""
 
+    active_validation_config = validation_config or ValidationConfig()
     if config.grid_size not in (2, 3):
         raise MosaicError("grid size must be 2 or 3")
     if config.output_width <= 0 or config.output_height <= 0:
@@ -115,6 +124,7 @@ def create_mosaic(
                 transformed,
                 config.output_width,
                 config.output_height,
+                active_validation_config,
             )
             if result.accepted and result.box is not None:
                 output_boxes.append(result.box)

@@ -76,6 +76,7 @@ def generate_mosaics(
     overwrite: bool = False,
     manifest_path: Path | None = None,
     report_path: Path | None = None,
+    min_normalized_area: float = 0.0,
 ) -> WorkflowOutputs:
     """Generate deterministic mosaic images and YOLO label files."""
 
@@ -86,6 +87,7 @@ def generate_mosaics(
         min_box_width=min_box_width,
         min_box_height=min_box_height,
         min_visible_ratio=min_visible_ratio,
+        min_normalized_area=min_normalized_area,
     )
     items = load_annotated_images(
         images_dir,
@@ -116,7 +118,7 @@ def generate_mosaics(
             jpeg_quality=jpeg_quality,
             overwrite=overwrite,
         )
-        result = create_mosaic(items, config)
+        result = create_mosaic(items, config, validation_config)
         stats.merge(result.stats)
         image_path = output_images_dir / f"mosaic_{index:04d}.{extension}"
         label_path = output_labels_dir / f"mosaic_{index:04d}.txt"
@@ -156,6 +158,7 @@ def validate_dataset(
     min_box_height: float = 2.0,
     overwrite: bool = False,
     report_path: Path | None = None,
+    min_normalized_area: float = 0.0,
 ) -> ProcessingStats:
     """Validate a dataset and optionally write repaired labels elsewhere."""
 
@@ -164,6 +167,7 @@ def validate_dataset(
         min_box_width=min_box_width,
         min_box_height=min_box_height,
         min_visible_ratio=min_visible_ratio,
+        min_normalized_area=min_normalized_area,
     )
     items = load_annotated_images(
         images_dir,
@@ -195,6 +199,7 @@ def visualize_dataset(
     image_format: ImageFormat = "jpg",
     jpeg_quality: int = 95,
     overwrite: bool = False,
+    min_normalized_area: float = 0.0,
 ) -> WorkflowOutputs:
     """Render bounding-box preview images for a dataset."""
 
@@ -203,6 +208,7 @@ def visualize_dataset(
         min_box_width=min_box_width,
         min_box_height=min_box_height,
         min_visible_ratio=min_visible_ratio,
+        min_normalized_area=min_normalized_area,
     )
     items = load_annotated_images(
         images_dir,
@@ -249,11 +255,19 @@ def build_web_mosaic(
     height: int = 1280,
     seed: int = 42,
     min_visible_ratio: float = 0.25,
+    min_box_width: float = 2.0,
+    min_box_height: float = 2.0,
+    min_normalized_area: float = 0.0,
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8], str, Path]:
     """Build one mosaic for the Gradio web workflow and export a ZIP."""
 
     label_map = {path.stem: path for path in label_paths}
-    validation_config = ValidationConfig(min_visible_ratio=min_visible_ratio)
+    validation_config = ValidationConfig(
+        min_visible_ratio=min_visible_ratio,
+        min_box_width=min_box_width,
+        min_box_height=min_box_height,
+        min_normalized_area=min_normalized_area,
+    )
     items: list[AnnotatedImage] = []
     for image_path in image_paths:
         image = load_image(image_path)
@@ -278,6 +292,7 @@ def build_web_mosaic(
             seed=seed,
             fill_policy="repeat",
         ),
+        validation_config,
     )
     annotation_text = serialize_yolo_boxes(result.yolo_boxes)
     visualized = draw_boxes(result.image, result.pixel_boxes)

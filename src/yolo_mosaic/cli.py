@@ -46,6 +46,7 @@ def generate(
     min_visible_ratio: Annotated[float, typer.Option()] = 0.25,
     min_box_width: Annotated[float, typer.Option()] = 2.0,
     min_box_height: Annotated[float, typer.Option()] = 2.0,
+    min_normalized_area: Annotated[float, typer.Option()] = 0.0,
     image_format: Annotated[ImageFormat, typer.Option()] = "jpg",
     jpeg_quality: Annotated[int, typer.Option()] = 95,
     overwrite: Annotated[bool, typer.Option()] = False,
@@ -69,6 +70,7 @@ def generate(
         min_visible_ratio=min_visible_ratio,
         min_box_width=min_box_width,
         min_box_height=min_box_height,
+        min_normalized_area=min_normalized_area,
         image_format=image_format,
         jpeg_quality=jpeg_quality,
         overwrite=overwrite,
@@ -87,21 +89,23 @@ def validate(
     min_visible_ratio: Annotated[float, typer.Option()] = 0.25,
     min_box_width: Annotated[float, typer.Option()] = 2.0,
     min_box_height: Annotated[float, typer.Option()] = 2.0,
+    min_normalized_area: Annotated[float, typer.Option()] = 0.0,
     overwrite: Annotated[bool, typer.Option()] = False,
     report_path: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Validate a YOLO dataset and optionally write repaired labels."""
 
     stats = validate_dataset(
-        images_dir,
-        labels_dir,
-        output_labels_dir,
-        missing_label_policy,
-        min_visible_ratio,
-        min_box_width,
-        min_box_height,
-        overwrite,
-        report_path,
+        images_dir=images_dir,
+        labels_dir=labels_dir,
+        output_labels_dir=output_labels_dir,
+        missing_label_policy=missing_label_policy,
+        min_visible_ratio=min_visible_ratio,
+        min_box_width=min_box_width,
+        min_box_height=min_box_height,
+        overwrite=overwrite,
+        report_path=report_path,
+        min_normalized_area=min_normalized_area,
     )
     _json_stats(stats.as_dict())
 
@@ -115,6 +119,7 @@ def visualize(
     min_visible_ratio: Annotated[float, typer.Option()] = 0.25,
     min_box_width: Annotated[float, typer.Option()] = 2.0,
     min_box_height: Annotated[float, typer.Option()] = 2.0,
+    min_normalized_area: Annotated[float, typer.Option()] = 0.0,
     image_format: Annotated[ImageFormat, typer.Option()] = "jpg",
     jpeg_quality: Annotated[int, typer.Option()] = 95,
     overwrite: Annotated[bool, typer.Option()] = False,
@@ -122,16 +127,17 @@ def visualize(
     """Render images with repaired bounding boxes."""
 
     result = visualize_dataset(
-        images_dir,
-        labels_dir,
-        output_dir,
-        missing_label_policy,
-        min_visible_ratio,
-        min_box_width,
-        min_box_height,
-        image_format,
-        jpeg_quality,
-        overwrite,
+        images_dir=images_dir,
+        labels_dir=labels_dir,
+        output_dir=output_dir,
+        missing_label_policy=missing_label_policy,
+        min_visible_ratio=min_visible_ratio,
+        min_box_width=min_box_width,
+        min_box_height=min_box_height,
+        image_format=image_format,
+        jpeg_quality=jpeg_quality,
+        overwrite=overwrite,
+        min_normalized_area=min_normalized_area,
     )
     _json_stats(result.stats.as_dict())
 
