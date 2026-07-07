@@ -158,9 +158,9 @@ Defaults are minimum visible ratio `0.25` and minimum box size `2x2 px`.
 ## Testing
 
 ```bash
-ruff check .
-mypy src
-pytest --cov=src/yolo_mosaic --cov-report=term-missing
+python -m ruff check .
+python -m mypy src
+python -m pytest --cov=src/yolo_mosaic --cov-report=term-missing
 ```
 
 ## Benchmarking
@@ -181,7 +181,8 @@ docker run --rm -p 7860:7860 yolo-mosaic-toolkit web --host 0.0.0.0 --port 7860
 
 ## CI
 
-GitHub Actions runs Ruff, mypy, and pytest with coverage on Python 3.11 and 3.12.
+GitHub Actions prints the installed tool versions, then runs Ruff, mypy, and pytest with
+coverage on Python 3.11 and 3.12.
 
 ## Example Outputs
 
