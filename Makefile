@@ -4,22 +4,22 @@ install:
 	python -m pip install -e ".[dev]"
 
 lint:
-	ruff check .
+	python -m ruff check .
 
 type:
-	mypy src
+	python -m mypy src
 
 test:
-	pytest --cov=src/yolo_mosaic --cov-report=term-missing
+	python -m pytest --cov=src/yolo_mosaic --cov-report=term-missing
 
 check: lint type test
 
 synthetic:
-	yolo-mosaic synthetic --output-dir examples/synthetic_dataset --num-images 30 --seed 42
+	yolo-mosaic synthetic --output-dir examples/synthetic_dataset --num-images 30 --seed 42 --overwrite
 
 demo:
-	yolo-mosaic generate --images-dir examples/synthetic_dataset/images --labels-dir examples/synthetic_dataset/labels --output-images-dir examples/outputs/images --output-labels-dir examples/outputs/labels --grid 2 --count 2 --seed 42
-	yolo-mosaic visualize --images-dir examples/outputs/images --labels-dir examples/outputs/labels --output-dir examples/outputs/visualized
+	yolo-mosaic generate --images-dir examples/synthetic_dataset/images --labels-dir examples/synthetic_dataset/labels --output-images-dir examples/outputs/2x2/images --output-labels-dir examples/outputs/2x2/labels --grid 2 --count 2 --seed 42 --overwrite
+	yolo-mosaic visualize --images-dir examples/outputs/2x2/images --labels-dir examples/outputs/2x2/labels --output-dir examples/outputs/2x2/visualized --overwrite
 
 benchmark:
 	yolo-mosaic benchmark --output-dir examples/benchmark --overwrite

@@ -13,9 +13,10 @@ python -m pip install -e ".[dev]"
 Run the same checks used by CI:
 
 ```bash
-ruff check .
-mypy src
-pytest --cov=src/yolo_mosaic --cov-report=term-missing
+python -m ruff check .
+python -m mypy src
+python -m pytest --cov=src/yolo_mosaic --cov-report=term-missing
+pre-commit run --all-files
 ```
 
 ## Engineering Rules
