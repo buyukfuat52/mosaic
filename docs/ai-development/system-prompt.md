@@ -58,7 +58,7 @@ Include:
 - A roadmap section
 - A troubleshooting section
 - A short "Engineering highlights" section suitable for recruiters
-- A `PORTFOLIO_GUIDE.md` file with suggested resume bullet points and interview talking points
+- A `docs/portfolio/portfolio-guide.md` file with suggested resume bullet points and interview talking points
 
 Do not claim a benchmark result, coverage percentage, test result, or CI status unless it was actually measured.
 
@@ -346,7 +346,7 @@ yolo-mosaic-toolkit/
 ├── Dockerfile
 ├── LICENSE
 ├── Makefile
-├── PORTFOLIO_GUIDE.md
+├── docs/portfolio/portfolio-guide.md
 ├── pyproject.toml
 └── README.md
 ```
@@ -636,7 +636,7 @@ Also create:
 - `docs/examples.md`
 - `CONTRIBUTING.md`
 - `CHANGELOG.md`
-- `PORTFOLIO_GUIDE.md`
+- `docs/portfolio/portfolio-guide.md`
 
 The architecture documentation should include a Mermaid diagram where appropriate.
 
@@ -676,7 +676,7 @@ Document example Docker commands.
 
 ## 19. Portfolio guide requirements
 
-Create `PORTFOLIO_GUIDE.md` containing:
+Create `docs/portfolio/portfolio-guide.md` containing:
 
 - A concise project description
 - 3 to 5 resume bullet options

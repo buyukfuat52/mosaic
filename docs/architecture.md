@@ -43,8 +43,9 @@ flowchart LR
 - Internal geometry keeps floating-point precision.
 - Letterbox image placement and bounding-box transforms share the same `LetterboxTransform`.
 - Repaired and clipped boxes are filtered before serialization.
+- Source annotation validation and post-transform mosaic validation share the same `ValidationConfig`.
 - CLI and web code never implement bounding-box mathematics directly.
 
 ## Error Handling
 
-The toolkit rejects non-finite values, negative class IDs, zero-area boxes, and boxes that fall below size or visibility thresholds. Missing labels can be treated as empty, skipped, or errors. Output files are not overwritten unless `--overwrite` is supplied.
+The toolkit rejects non-finite values, negative class IDs, zero-area boxes, and boxes that fall below size or visibility thresholds. Missing labels can be treated as empty, skipped, or errors. Output files are not overwritten unless `--overwrite` is supplied. Web ZIP exports are kept in a temporary export directory and old export folders are removed after a retention window so downloads can finish without accumulating indefinitely.

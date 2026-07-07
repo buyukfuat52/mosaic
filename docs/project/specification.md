@@ -61,7 +61,7 @@ The project is intended for a public GitHub portfolio and should demonstrate str
 ## Required repository support
 
 - `README.md`
-- `PORTFOLIO_GUIDE.md`
+- `docs/portfolio/portfolio-guide.md`
 - `CONTRIBUTING.md`
 - `CHANGELOG.md`
 - `LICENSE`

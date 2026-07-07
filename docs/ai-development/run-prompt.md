@@ -2,9 +2,9 @@
 
 Build the complete **YOLO Mosaic Annotation Toolkit** in this workspace according to:
 
-- `SYSTEM_PROMPT.md`
-- `PROJECT_SPEC.md`
-- `ACCEPTANCE_CRITERIA.md`
+- `docs/ai-development/system-prompt.md`
+- `docs/project/specification.md`
+- `docs/project/acceptance-criteria.md`
 
 This is a portfolio project intended to strengthen a computer vision and software engineering resume.
 
@@ -39,8 +39,8 @@ Also run at least one end-to-end workflow:
 
 ```bash
 yolo-mosaic synthetic --output-dir examples/synthetic_dataset --num-images 30 --seed 42
-yolo-mosaic generate --images-dir examples/synthetic_dataset/images --labels-dir examples/synthetic_dataset/labels --output-images-dir examples/outputs/images --output-labels-dir examples/outputs/labels --grid 2 --count 2 --seed 42
-yolo-mosaic visualize --images-dir examples/outputs/images --labels-dir examples/outputs/labels --output-dir examples/outputs/visualized
+yolo-mosaic generate --images-dir examples/synthetic_dataset/images --labels-dir examples/synthetic_dataset/labels --output-images-dir examples/outputs/2x2/images --output-labels-dir examples/outputs/2x2/labels --grid 2 --count 2 --seed 42
+yolo-mosaic visualize --images-dir examples/outputs/2x2/images --labels-dir examples/outputs/2x2/labels --output-dir examples/outputs/2x2/visualized
 ```
 
 Rules:
@@ -52,7 +52,7 @@ Rules:
 - Use deterministic seeded randomness.
 - Preserve cross-platform compatibility.
 - Do not claim a test, benchmark, coverage result, or CI status unless it was actually measured.
-- Treat `ACCEPTANCE_CRITERIA.md` as the final definition of done.
+- Treat `docs/project/acceptance-criteria.md` as the final definition of done.
 
 In the final report, include:
 

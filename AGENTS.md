@@ -25,9 +25,9 @@ Build and maintain a production-quality YOLO mosaic annotation toolkit suitable 
 ## Required checks
 
 ```bash
-ruff check .
-mypy src
-pytest --cov=src/yolo_mosaic --cov-report=term-missing
+python -m ruff check .
+python -m mypy src
+python -m pytest --cov=src/yolo_mosaic --cov-report=term-missing
 ```
 
 ## Critical files
@@ -48,4 +48,4 @@ pytest --cov=src/yolo_mosaic --cov-report=term-missing
 - Do not use fake badges.
 - Generate screenshots and output images from the real implementation.
 - Document design trade-offs and limitations.
-- Keep `PORTFOLIO_GUIDE.md` aligned with implemented features.
+- Keep `docs/portfolio/portfolio-guide.md` aligned with implemented features.

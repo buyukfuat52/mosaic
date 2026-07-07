@@ -64,8 +64,8 @@
 - [ ] README contains web UI instructions.
 - [ ] README contains example output references.
 - [ ] README contains limitations and roadmap sections.
-- [ ] `PORTFOLIO_GUIDE.md` contains resume bullet templates.
-- [ ] `PORTFOLIO_GUIDE.md` contains interview talking points.
+- [ ] `docs/portfolio/portfolio-guide.md` contains resume bullet templates.
+- [ ] `docs/portfolio/portfolio-guide.md` contains interview talking points.
 - [ ] `docs/architecture.md` contains an architecture diagram.
 - [ ] `docs/examples.md` documents reproducible demos.
 - [ ] Performance numbers are not invented.
