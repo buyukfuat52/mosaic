@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from yolo_mosaic.models import AnnotatedImage, MosaicConfig, PixelBox
+from yolo_mosaic.models import AnnotatedImage, MosaicConfig, PixelBox, ValidationConfig
 from yolo_mosaic.mosaic import MosaicError, create_mosaic
 
 
@@ -94,3 +94,71 @@ def test_mosaic_counts_rejected_transformed_boxes() -> None:
     )
     assert result.pixel_boxes == []
     assert result.stats.rejected_boxes == 4
+
+
+def test_custom_minimum_box_width_applies_after_downscaling() -> None:
+    items = [
+        _item(0, [PixelBox(1, 0.0, 0.0, 7.0, 20.0)]),
+        _item(1),
+        _item(2),
+        _item(3),
+    ]
+    config = MosaicConfig(grid_size=2, output_width=100, output_height=100)
+
+    default_result = create_mosaic(items, config)
+    strict_result = create_mosaic(items, config, ValidationConfig(min_box_width=4.0))
+
+    assert default_result.pixel_boxes == [PixelBox(1, 0.0, 0.0, 3.5, 10.0)]
+    assert strict_result.pixel_boxes == []
+    assert strict_result.stats.rejected_boxes == 1
+
+
+def test_custom_minimum_box_height_applies_after_downscaling() -> None:
+    items = [
+        _item(0, [PixelBox(1, 0.0, 0.0, 20.0, 7.0)]),
+        _item(1),
+        _item(2),
+        _item(3),
+    ]
+    config = MosaicConfig(grid_size=2, output_width=100, output_height=100)
+
+    default_result = create_mosaic(items, config)
+    strict_result = create_mosaic(items, config, ValidationConfig(min_box_height=4.0))
+
+    assert default_result.pixel_boxes == [PixelBox(1, 0.0, 0.0, 10.0, 3.5)]
+    assert strict_result.pixel_boxes == []
+    assert strict_result.stats.rejected_boxes == 1
+
+
+def test_custom_minimum_visible_ratio_applies_to_transformed_box() -> None:
+    items = [
+        _item(0, [PixelBox(1, -60.0, 0.0, 40.0, 20.0)]),
+        _item(1),
+        _item(2),
+        _item(3),
+    ]
+    config = MosaicConfig(grid_size=2, output_width=100, output_height=100)
+
+    default_result = create_mosaic(items, config)
+    strict_result = create_mosaic(items, config, ValidationConfig(min_visible_ratio=0.5))
+
+    assert default_result.pixel_boxes == [PixelBox(1, 0.0, 0.0, 20.0, 10.0)]
+    assert strict_result.pixel_boxes == []
+    assert strict_result.stats.rejected_boxes == 1
+
+
+def test_default_validation_config_remains_backward_compatible() -> None:
+    items = [
+        _item(0, [PixelBox(1, 0.0, 0.0, 20.0, 20.0)]),
+        _item(1),
+        _item(2),
+        _item(3),
+    ]
+    config = MosaicConfig(grid_size=2, output_width=100, output_height=100)
+
+    implicit_default = create_mosaic(items, config)
+    explicit_default = create_mosaic(items, config, ValidationConfig())
+
+    assert implicit_default.pixel_boxes == explicit_default.pixel_boxes
+    assert implicit_default.yolo_boxes == explicit_default.yolo_boxes
+    assert implicit_default.stats == explicit_default.stats
