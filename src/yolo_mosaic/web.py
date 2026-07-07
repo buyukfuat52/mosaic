@@ -51,28 +51,60 @@ def _review_uploads(
     return report.as_markdown(), _status_for_report(report.warning_count)
 
 
-def _example_dataset_paths(grid: int) -> tuple[list[str], list[str], str | None, str, str]:
-    grid_value = _coerce_grid(grid)
+def _example_paths_for_grid(grid: GridSize) -> tuple[list[Path], list[Path], Path | None]:
     dataset_dir = Path("examples/synthetic_dataset")
     image_paths = sorted((dataset_dir / "images").glob("*.jpg"))
     label_paths = sorted((dataset_dir / "labels").glob("*.txt"))
     class_names_path = dataset_dir / "classes.txt"
-    if len(image_paths) < int(grid_value) * int(grid_value):
+    expected_cells = int(grid) * int(grid)
+    if len(image_paths) < expected_cells:
         raise gr.Error(
             "Example assets are missing. Run `yolo-mosaic synthetic "
             "--output-dir examples/synthetic_dataset --num-images 30 --seed 42` first."
         )
-    selected_images = image_paths[: int(grid_value) * int(grid_value)]
+    selected_images = image_paths[:expected_cells]
     selected_stems = {path.stem for path in selected_images}
     selected_labels = [path for path in label_paths if path.stem in selected_stems]
-    report = build_upload_match_report(selected_images, selected_labels, grid_value)
-    return (
-        [str(path) for path in selected_images],
-        [str(path) for path in selected_labels],
-        str(class_names_path) if class_names_path.exists() else None,
-        report.as_markdown(),
-        "Loaded repository example files.",
+    return selected_images, selected_labels, class_names_path if class_names_path.exists() else None
+
+
+def _generate_example(
+    grid: int,
+    width: int | float,
+    height: int | float,
+    seed: int,
+    min_visible_ratio: float,
+    min_box_width: float,
+    min_box_height: float,
+    min_normalized_area: float,
+    display_class_names: bool,
+    progress: gr.Progress = DEFAULT_PROGRESS,
+) -> tuple[object, object, str, str, str, str]:
+    grid_value = _coerce_grid(grid)
+    image_paths, label_paths, class_names_path = _example_paths_for_grid(grid_value)
+    class_names = read_class_names_file(class_names_path)
+    report = build_upload_match_report(image_paths, label_paths, grid_value)
+    progress(0.25, desc="Loading demo files")
+    raw, visualized, annotations, zip_path = build_web_mosaic(
+        image_paths,
+        label_paths,
+        grid=grid_value,
+        width=_coerce_output_size(width, "Output width"),
+        height=_coerce_output_size(height, "Output height"),
+        seed=int(seed),
+        min_visible_ratio=min_visible_ratio,
+        min_box_width=min_box_width,
+        min_box_height=min_box_height,
+        min_normalized_area=min_normalized_area,
+        class_names=class_names,
+        display_class_names=display_class_names,
     )
+    progress(0.9, desc="Exporting ZIP")
+    status = (
+        f"Generated demo {grid_value}x{grid_value} mosaic with "
+        f"{len(annotations.splitlines())} annotation row(s)."
+    )
+    return raw, visualized, annotations, str(zip_path), report.as_markdown(), status
 
 
 def _generate(
@@ -210,7 +242,7 @@ def build_interface() -> gr.Blocks:
             display_class_names = gr.Checkbox(value=True, label="Display class names")
         with gr.Row():
             review_button = gr.Button("Review files")
-            example_button = gr.Button("Load demo files")
+            example_button = gr.Button("Run demo")
             generate_button = gr.Button("Generate mosaic", variant="primary")
         match_report = gr.Markdown("### Input summary\n- Uploaded images: 0")
         status_text = gr.Textbox(label="Status", value="Waiting for uploads.", interactive=False)
@@ -239,9 +271,26 @@ def build_interface() -> gr.Blocks:
             outputs=[match_report, status_text],
         )
         example_button.click(
-            _example_dataset_paths,
-            inputs=[grid],
-            outputs=[image_files, label_files, class_names_file, match_report, status_text],
+            _generate_example,
+            inputs=[
+                grid,
+                width,
+                height,
+                seed,
+                min_visible_ratio,
+                min_box_width,
+                min_box_height,
+                min_normalized_area,
+                display_class_names,
+            ],
+            outputs=[
+                raw_image,
+                visualized_image,
+                annotation_text,
+                zip_file,
+                match_report,
+                status_text,
+            ],
         )
         generate_button.click(
             _generate,
