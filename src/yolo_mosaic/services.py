@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 import platform
+import shutil
 import tempfile
 import time
+import uuid
 import zipfile
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, cast
@@ -51,9 +54,182 @@ class UploadedFileLike(Protocol):
     name: str
 
 
+WEB_EXPORT_RETENTION_SECONDS = 6 * 60 * 60
+WEB_EXPORT_ROOT = Path(tempfile.gettempdir()) / "yolo_mosaic_web_exports"
+
+
+@dataclass(frozen=True, slots=True)
+class UploadMatchReport:
+    """Summary of uploaded image and label matching by filename stem."""
+
+    image_count: int
+    label_count: int
+    matched_count: int
+    images_without_labels: list[str]
+    extra_label_files: list[str]
+    duplicate_image_stems: list[str]
+    duplicate_label_stems: list[str]
+    unused_files: list[str]
+    expected_cells: int
+
+    @property
+    def warning_count(self) -> int:
+        """Return the number of warning categories with at least one item."""
+
+        warnings = [
+            self.images_without_labels,
+            self.extra_label_files,
+            self.duplicate_image_stems,
+            self.duplicate_label_stems,
+        ]
+        insufficient = self.image_count < self.expected_cells
+        return sum(1 for items in warnings if items) + int(insufficient)
+
+    def as_markdown(self) -> str:
+        """Render the report as compact Markdown for the web UI."""
+
+        grid_size = int(self.expected_cells**0.5)
+        lines = [
+            "### Input summary",
+            f"- Uploaded images: {self.image_count}",
+            f"- Uploaded annotation files: {self.label_count}",
+            f"- Matched image-label pairs: {self.matched_count}",
+            f"- Images without labels: {len(self.images_without_labels)}",
+            f"- Unused files: {len(self.unused_files)}",
+            f"- Expected mosaic cells: {self.expected_cells}",
+        ]
+        warnings: list[str] = []
+        if self.images_without_labels:
+            warnings.append(
+                "Missing annotation files: " + ", ".join(self.images_without_labels)
+            )
+        if self.extra_label_files:
+            warnings.append("Extra annotation files: " + ", ".join(self.extra_label_files))
+        if self.duplicate_image_stems:
+            warnings.append("Duplicate image stems: " + ", ".join(self.duplicate_image_stems))
+        if self.duplicate_label_stems:
+            warnings.append("Duplicate label stems: " + ", ".join(self.duplicate_label_stems))
+        if self.image_count < self.expected_cells:
+            warnings.append(
+                f"Insufficient images for a {grid_size}x{grid_size} grid; "
+                "repeat fill will reuse uploads."
+            )
+        if warnings:
+            lines.append("")
+            lines.append("### Warnings")
+            lines.extend(f"- {warning}" for warning in warnings)
+        else:
+            lines.extend(["", "No matching warnings."])
+        return "\n".join(lines)
+
+
 def _ensure_output_file(path: Path, overwrite: bool) -> None:
     if path.exists() and not overwrite:
         raise FileExistsError(f"refusing to overwrite existing file: {path}")
+
+
+def _paths_by_stem(paths: list[Path]) -> dict[str, list[Path]]:
+    grouped: defaultdict[str, list[Path]] = defaultdict(list)
+    for path in paths:
+        grouped[path.stem].append(path)
+    return dict(grouped)
+
+
+def _duplicate_stems(grouped_paths: dict[str, list[Path]]) -> list[str]:
+    return sorted(stem for stem, paths in grouped_paths.items() if len(paths) > 1)
+
+
+def build_upload_match_report(
+    image_paths: list[Path],
+    label_paths: list[Path],
+    grid: GridSize,
+) -> UploadMatchReport:
+    """Summarize web uploads matched by filename stem."""
+
+    image_groups = _paths_by_stem(image_paths)
+    label_groups = _paths_by_stem(label_paths)
+    image_stems = set(image_groups)
+    label_stems = set(label_groups)
+    missing_label_stems = sorted(image_stems - label_stems)
+    extra_label_stems = sorted(label_stems - image_stems)
+    duplicate_image_stems = _duplicate_stems(image_groups)
+    duplicate_label_stems = _duplicate_stems(label_groups)
+    unused_files = [
+        path.name
+        for stem in extra_label_stems
+        for path in sorted(label_groups[stem], key=lambda item: item.name)
+    ]
+    for stem in duplicate_label_stems:
+        duplicate_paths = sorted(label_groups[stem], key=lambda item: item.name)
+        unused_files.extend(path.name for path in duplicate_paths[1:])
+
+    return UploadMatchReport(
+        image_count=len(image_paths),
+        label_count=len(label_paths),
+        matched_count=sum(1 for path in image_paths if path.stem in label_stems),
+        images_without_labels=[
+            path.name
+            for stem in missing_label_stems
+            for path in sorted(image_groups[stem], key=lambda item: item.name)
+        ],
+        extra_label_files=[
+            path.name
+            for stem in extra_label_stems
+            for path in sorted(label_groups[stem], key=lambda item: item.name)
+        ],
+        duplicate_image_stems=duplicate_image_stems,
+        duplicate_label_stems=duplicate_label_stems,
+        unused_files=sorted(unused_files),
+        expected_cells=int(grid) * int(grid),
+    )
+
+
+def parse_class_names_text(text: str) -> dict[int, str]:
+    """Parse a YOLO classes.txt-style file into class-id labels."""
+
+    return {
+        index: line.strip()
+        for index, line in enumerate(text.splitlines())
+        if line.strip()
+    }
+
+
+def read_class_names_file(path: Path | None) -> dict[int, str] | None:
+    """Read optional class names from a text file."""
+
+    if path is None:
+        return None
+    return parse_class_names_text(path.read_text(encoding="utf-8"))
+
+
+def cleanup_web_exports(
+    export_root: Path = WEB_EXPORT_ROOT,
+    max_age_seconds: int = WEB_EXPORT_RETENTION_SECONDS,
+    now: float | None = None,
+) -> int:
+    """Delete old web export directories while keeping recent downloads available."""
+
+    if not export_root.exists():
+        return 0
+    active_now = time.time() if now is None else now
+    removed = 0
+    for child in export_root.iterdir():
+        if not child.is_dir():
+            continue
+        age_seconds = active_now - child.stat().st_mtime
+        if age_seconds <= max_age_seconds:
+            continue
+        shutil.rmtree(child, ignore_errors=True)
+        removed += 1
+    return removed
+
+
+def _create_web_export_dir() -> Path:
+    cleanup_web_exports()
+    WEB_EXPORT_ROOT.mkdir(parents=True, exist_ok=True)
+    export_dir = WEB_EXPORT_ROOT / f"{int(time.time())}_{uuid.uuid4().hex}"
+    export_dir.mkdir()
+    return export_dir
 
 
 def generate_mosaics(
@@ -258,10 +434,21 @@ def build_web_mosaic(
     min_box_width: float = 2.0,
     min_box_height: float = 2.0,
     min_normalized_area: float = 0.0,
+    class_names: dict[int, str] | None = None,
+    display_class_names: bool = False,
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8], str, Path]:
     """Build one mosaic for the Gradio web workflow and export a ZIP."""
 
-    label_map = {path.stem: path for path in label_paths}
+    if not image_paths:
+        raise ValueError("upload at least one image")
+    if width <= 0 or height <= 0:
+        raise ValueError("output width and height must be positive")
+
+    label_groups = _paths_by_stem(label_paths)
+    label_map = {
+        stem: sorted(paths, key=lambda path: path.name)[0]
+        for stem, paths in label_groups.items()
+    }
     validation_config = ValidationConfig(
         min_visible_ratio=min_visible_ratio,
         min_box_width=min_box_width,
@@ -295,9 +482,13 @@ def build_web_mosaic(
         validation_config,
     )
     annotation_text = serialize_yolo_boxes(result.yolo_boxes)
-    visualized = draw_boxes(result.image, result.pixel_boxes)
+    visualized = draw_boxes(
+        result.image,
+        result.pixel_boxes,
+        class_names if display_class_names else None,
+    )
 
-    temp_dir = Path(tempfile.mkdtemp(prefix="yolo_mosaic_web_"))
+    temp_dir = _create_web_export_dir()
     raw_path = temp_dir / "mosaic.jpg"
     vis_path = temp_dir / "mosaic_visualized.jpg"
     label_path = temp_dir / "mosaic.txt"
