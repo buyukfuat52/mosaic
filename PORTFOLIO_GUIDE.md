@@ -1,4 +1,4 @@
-# PORTFOLIO GUIDE
+# Portfolio Guide
 
 This file explains how to present the YOLO Mosaic Annotation Toolkit on a resume, GitHub profile, LinkedIn, and during technical interviews.
 
@@ -8,13 +8,13 @@ A production-oriented Python toolkit for generating 2x2 and 3x3 YOLO training mo
 
 ## Resume bullet templates
 
-Use only the bullets that match the final implementation.
+Use only the bullets that match the implementation and measurements you have actually run.
 
 - Built a typed Python computer vision toolkit that generates deterministic 2x2 and 3x3 image mosaics and recalculates YOLO bounding boxes through resizing, letterboxing, clipping, and placement transforms.
 - Designed a modular annotation pipeline with validation and repair rules for malformed, out-of-bounds, non-finite, reversed, and zero-area bounding boxes.
 - Developed a reusable service layer shared by a Typer CLI and Gradio web interface, avoiding duplicated image-processing logic across application layers.
 - Added automated testing, static type checking, linting, CI, Docker support, synthetic dataset generation, and reproducible end-to-end demos.
-- Achieved [COVERAGE]% test coverage and processed [N] images at [X] mosaics/second on [HARDWARE]. Replace bracketed fields only after measuring them.
+- Achieved [COVERAGE]% test coverage and processed [N] images at [X] mosaics/second on [HARDWARE]. Replace bracketed fields only after measuring them with the repository commands.
 
 ## LinkedIn project description
 

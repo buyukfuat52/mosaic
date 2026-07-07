@@ -1,0 +1,13 @@
+{
+  "num_images": 30,
+  "seed": 42,
+  "include_invalid": false,
+  "classes": [
+    "square",
+    "wide_box",
+    "tall_box"
+  ],
+  "images_without_annotations": 5,
+  "missing_annotation_files": 0,
+  "malformed_rows": 0
+}
