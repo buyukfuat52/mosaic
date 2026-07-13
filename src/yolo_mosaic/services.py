@@ -100,9 +100,7 @@ class UploadMatchReport:
         ]
         warnings: list[str] = []
         if self.images_without_labels:
-            warnings.append(
-                "Missing annotation files: " + ", ".join(self.images_without_labels)
-            )
+            warnings.append("Missing annotation files: " + ", ".join(self.images_without_labels))
         if self.extra_label_files:
             warnings.append("Extra annotation files: " + ", ".join(self.extra_label_files))
         if self.duplicate_image_stems:
@@ -187,11 +185,7 @@ def build_upload_match_report(
 def parse_class_names_text(text: str) -> dict[int, str]:
     """Parse a YOLO classes.txt-style file into class-id labels."""
 
-    return {
-        index: line.strip()
-        for index, line in enumerate(text.splitlines())
-        if line.strip()
-    }
+    return {index: line.strip() for index, line in enumerate(text.splitlines()) if line.strip()}
 
 
 def read_class_names_file(path: Path | None) -> dict[int, str] | None:
@@ -446,8 +440,7 @@ def build_web_mosaic(
 
     label_groups = _paths_by_stem(label_paths)
     label_map = {
-        stem: sorted(paths, key=lambda path: path.name)[0]
-        for stem, paths in label_groups.items()
+        stem: sorted(paths, key=lambda path: path.name)[0] for stem, paths in label_groups.items()
     }
     validation_config = ValidationConfig(
         min_visible_ratio=min_visible_ratio,
@@ -462,9 +455,7 @@ def build_web_mosaic(
         stats = ProcessingStats()
         label_path = label_map.get(image_path.stem)
         yolo_boxes = (
-            parse_yolo_text(label_path.read_text(encoding="utf-8"), stats)
-            if label_path
-            else []
+            parse_yolo_text(label_path.read_text(encoding="utf-8"), stats) if label_path else []
         )
         pixel_boxes = [yolo_to_pixel(box, int(w), int(h)) for box in yolo_boxes]
         boxes = validate_and_repair_boxes(pixel_boxes, int(w), int(h), validation_config, stats)

@@ -15,8 +15,10 @@ def test_synthetic_data_generation(tmp_path: Path) -> None:
     dataset = tmp_path / "dataset"
     assert summary["num_images"] == 8
     assert (dataset / "images" / "synthetic_000.jpg").exists()
-    assert (dataset / "labels" / "synthetic_004.txt").read_text(encoding="utf-8").endswith(
-        "malformed row\n"
+    assert (
+        (dataset / "labels" / "synthetic_004.txt")
+        .read_text(encoding="utf-8")
+        .endswith("malformed row\n")
     )
     assert not (dataset / "labels" / "synthetic_005.txt").exists()
     assert (dataset / "classes.txt").read_text(encoding="utf-8").splitlines() == [

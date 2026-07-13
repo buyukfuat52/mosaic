@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import cast
 
 import gradio as gr
+import numpy as np
+from numpy.typing import NDArray
 
 from yolo_mosaic.models import GridSize
 from yolo_mosaic.services import (
@@ -79,7 +81,7 @@ def _generate_example(
     min_normalized_area: float,
     display_class_names: bool,
     progress: gr.Progress = DEFAULT_PROGRESS,
-) -> tuple[object, object, str, str, str, str]:
+) -> tuple[NDArray[np.uint8], NDArray[np.uint8], str, str, str, str]:
     grid_value = _coerce_grid(grid)
     image_paths, label_paths, class_names_path = _example_paths_for_grid(grid_value)
     class_names = read_class_names_file(class_names_path)
@@ -121,7 +123,7 @@ def _generate(
     min_box_height: float,
     min_normalized_area: float,
     progress: gr.Progress = DEFAULT_PROGRESS,
-) -> tuple[object, object, str, str, str, str]:
+) -> tuple[NDArray[np.uint8], NDArray[np.uint8], str, str, str, str]:
     try:
         progress(0.1, desc="Matching uploads")
         grid_value = _coerce_grid(grid)

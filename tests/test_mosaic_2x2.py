@@ -1,9 +1,17 @@
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
 
-from yolo_mosaic.models import AnnotatedImage, MosaicConfig, PixelBox, ValidationConfig
+from yolo_mosaic.models import (
+    AnnotatedImage,
+    FillPolicy,
+    GridSize,
+    MosaicConfig,
+    PixelBox,
+    ValidationConfig,
+)
 from yolo_mosaic.mosaic import MosaicError, create_mosaic
 
 
@@ -77,14 +85,24 @@ def test_error_policy_rejects_too_few_sources() -> None:
 
 def test_mosaic_rejects_invalid_grid_and_dimensions() -> None:
     with pytest.raises(MosaicError):
-        create_mosaic([_item(0)], MosaicConfig(grid_size=4, output_width=200, output_height=200))
+        create_mosaic(
+            [_item(0)],
+            MosaicConfig(
+                grid_size=cast(GridSize, 4),
+                output_width=200,
+                output_height=200,
+            ),
+        )
     with pytest.raises(MosaicError):
         create_mosaic([_item(0)], MosaicConfig(grid_size=2, output_width=0, output_height=200))
 
 
 def test_mosaic_rejects_unsupported_fill_policy() -> None:
     with pytest.raises(MosaicError):
-        create_mosaic([_item(0)], MosaicConfig(grid_size=2, fill_policy="unsupported"))
+        create_mosaic(
+            [_item(0)],
+            MosaicConfig(grid_size=2, fill_policy=cast(FillPolicy, "unsupported")),
+        )
 
 
 def test_mosaic_counts_rejected_transformed_boxes() -> None:

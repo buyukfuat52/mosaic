@@ -39,9 +39,7 @@ def draw_boxes(
         p2 = int(round(box.x_max)), int(round(box.y_max))
         cv2.rectangle(output, p1, p2, color, thickness)
         label = (
-            class_names.get(box.class_id, str(box.class_id))
-            if class_names
-            else str(box.class_id)
+            class_names.get(box.class_id, str(box.class_id)) if class_names else str(box.class_id)
         )
         label_size, baseline = cv2.getTextSize(
             label,

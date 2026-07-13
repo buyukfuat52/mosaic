@@ -29,10 +29,7 @@ def test_3x3_center_and_corner_coordinate_mapping() -> None:
 
 
 def test_seeded_sampling_is_deterministic() -> None:
-    items = [
-        _item(index, [PixelBox(index, 0.0, 0.0, 90.0, 90.0)])
-        for index in range(12)
-    ]
+    items = [_item(index, [PixelBox(index, 0.0, 0.0, 90.0, 90.0)]) for index in range(12)]
     config = MosaicConfig(grid_size=3, output_width=300, output_height=300, seed=123)
     first = create_mosaic(items, config)
     second = create_mosaic(items, config)
