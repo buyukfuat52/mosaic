@@ -8,11 +8,20 @@ Generate deterministic 2x2 and 3x3 YOLO training mosaics with validated bounding
 
 ## Demo
 
-| 2x2 visualized mosaic | 3x3 visualized mosaic |
-| --- | --- |
-| ![2x2 visualized YOLO mosaic](docs/assets/mosaic-2x2-visualized.jpg) | ![3x3 visualized YOLO mosaic](docs/assets/mosaic-3x3-visualized.jpg) |
+<p align="center">
+  <img src="docs/assets/web-interface.png"
+       alt="YOLO Mosaic Annotation Toolkit Gradio interface showing upload controls, matching summary, status, and generated mosaic previews"
+       width="850">
+</p>
 
-![Gradio web interface](docs/assets/web-interface.png)
+<p align="center">
+  <img src="docs/assets/mosaic-2x2-visualized.jpg"
+       alt="Generated 2x2 YOLO mosaic with transformed bounding-box annotations"
+       width="390">
+  <img src="docs/assets/mosaic-3x3-visualized.jpg"
+       alt="Generated 3x3 YOLO mosaic with transformed bounding-box annotations"
+       width="390">
+</p>
 
 ## Key Features
 
@@ -186,6 +195,7 @@ Reproducible examples are documented in [docs/examples.md](docs/examples.md).
 
 - The implemented mosaic mode is deterministic equal-cell placement, not randomized YOLO-style mosaic center cropping.
 - COCO and Pascal VOC import/export are not included.
+- Gradio's built-in file upload dropzone text follows the viewer's browser locale; project-defined labels, help text, and portfolio screenshots are maintained in English.
 - Web exports use temporary files with a retention cleanup window; very long-lived download links can expire after cleanup.
 - Parallel workers are reserved for future scaling work.
 

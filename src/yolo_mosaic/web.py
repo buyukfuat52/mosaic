@@ -184,6 +184,10 @@ def build_interface() -> gr.Blocks:
                 file_types=[".txt"],
                 label="Class names",
             )
+        gr.Markdown(
+            "Upload image files, matching YOLO `.txt` label files, and an optional "
+            "`classes.txt` file for display names."
+        )
         with gr.Row():
             grid = gr.Radio(
                 [2, 3],
